@@ -14,9 +14,21 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+import pickle
+
+# train the cookie
+driver = webdriver.Chrome("D://origin app//chromedriver.exe")
+url = 'https://www.opentable.com/r/hookah-and-sweets-ingolstadt?p=4'
+driver.get(url)
+
+# stop here
+cookies = driver.get_cookies()
+with open('cookies.pkl','wb') as f:
+   pickle.dump(cookies, f)
 
 
 
+#---------------------------------- 
 
 # start the driver
 driver = webdriver.Chrome("D://origin app//chromedriver.exe")
@@ -25,16 +37,7 @@ driver = webdriver.Chrome("D://origin app//chromedriver.exe")
 url = 'https://www.google.com'
 driver.get(url)
 
-
-# insert cookies
-import pickle
-
-'''
-cookies = driver.get_cookies()
-with open('cookies.pkl','wb') as f:
-   pickle.dump(cookies, f)
-'''
-   
+# insert cookies   
 with open('cookies.pkl','rb') as f:
    cookies = pickle.load(f)
 
@@ -45,6 +48,12 @@ for cookie in cookies:
 url = 'https://www.opentable.com/r/hookah-and-sweets-ingolstadt?p=4'
 driver.get(url)
 driver.find_element_by_css_selector('div._92fe4c24 > div._5a483512 > div.af5c29c4 > button').click()    
+
+time_css = 'div.fe4f6429 > div > div:nth-child(1) > div > div._2aa6a1c2._093cb900 > span'
+driver.find_element_by_css_selector(time_css).click()
+
+driver.find_element_by_xpath('//*[@id="firstName"]').sendKeys('max')
+driver.find_element_by_xpath('//*[@id="lastName"]').sendKeys('musterman')
 
 
 
