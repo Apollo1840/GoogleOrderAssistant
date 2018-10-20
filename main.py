@@ -23,20 +23,16 @@ from flask import Flask, request, make_response, jsonify
 from forecast import Forecast, validate_params
 from bc3 import BasicCrawler
 import pandas as pd
-import requests
 from requests.exceptions import ReadTimeout
 import random
-import json
 from pprint import pprint
-import datetime
 import pickle
 
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
+import selenium.webdriver.support.ui as ui
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
+
 
 
 df = pd.read_csv("db.csv")
@@ -143,7 +139,83 @@ def givenTime(req):
            " persons at " + restaurantName + " at " + time_original + "?"
 
 def confirm(req):
-    pass
+    try:
+        parameters = req['queryResult']['parameters']
+
+        pprint(req)
+
+        contextParams  = req['queryResult']['outputContexts'][-1]['parameters']
+
+
+        numberPeople = contextParams['num_people']
+        restaurantName = contextParams['restaurantName']
+        time_original = contextParams['time.original']
+
+        # validate request parameters, return an error if there are issues
+        error, forecast_params = validate_params(parameters)
+        if error:
+            return error
+        
+        
+        driver = webdriver.Chrome("D://origin app//chromedriver.exe")
+
+        # enable cookie injuction
+        url = 'https://www.google.com'
+        driver.get(url)
+        
+        # insert cookies   
+        with open('cookies.pkl','rb') as f:
+           cookies = pickle.load(f)
+        
+        for cookie in cookies:
+            driver.add_cookie(cookie)
+        
+        # know go
+        
+        print(1, restaurantName)
+        restaurantName = '-'.join(restaurantName)
+        print(2, restaurantName)
+        
+        print(1, numberPeople)
+        numberPeople = numberPeople.split(' ')[0]
+        print(2, numberPeople)
+        
+        print(1, time_original)
+        time_original= time_original.split('T')[0]
+        print(2,time_original)
+        
+        url = 'https://www.opentable.de/r/{}?p={}&sd={}'.format(restaurantName,numberPeople,time_original)
+        print(url)
+        
+        driver.get(url)
+        
+        # to do : check the time
+        
+        time_btn_css = 'div.fe4f6429 > div > div:nth-child(1) > div > div._2aa6a1c2._093cb900 > span'
+        wait = ui.WebDriverWait(driver,10)
+        wait.until(lambda driver: driver.find_element_by_css_selector(time_btn_css))
+        driver.find_element_by_css_selector(time_btn_css).click()
+        
+        wait = ui.WebDriverWait(driver,10)
+        wait.until(lambda driver: driver.find_element_by_xpath('//*[@id="firstName"]'))
+        
+        
+        first_name = 'max'
+        last_name = 'musterman'
+        phone_number = '15234723254'
+        email = 'c.vlaicu17@gmail.com'
+        
+        driver.find_element_by_xpath('//*[@id="firstName"]').send_keys(first_name)
+        driver.find_element_by_xpath('//*[@id="lastName"]').send_keys(last_name)
+        driver.find_element_by_xpath('//*[@id="phone-country-input"]/div/div[2]/input').send_keys(phone_number)
+        driver.find_element_by_xpath('//*[@id="form-details"]/fieldset/div[2]/div[2]/input').send_keys(email)
+                
+        # driver.find_element_by_xpath('//*[@id="btn-complete"]').click()
+
+    except AttributeError:
+        return 'I failed to comply, sorry. I am still a prototype. Try again!'
+
+    return "I made a reservation. You should get an email with detail shortly. Want to do anything else later?"
 
 def theatre(req):
     pprint(theatreData)

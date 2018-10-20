@@ -57,7 +57,11 @@
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="753">
+<<<<<<< HEAD
               <caret line="228" lean-forward="true" selection-start-line="228" selection-end-line="228" />
+=======
+              <caret line="249" lean-forward="true" selection-start-line="249" selection-end-line="249" />
+>>>>>>> abb99bd39ef81eda7cb43dd5545209221f36a638
               <folding>
                 <element signature="e#644#655#0" expanded="true" />
               </folding>
@@ -349,7 +353,11 @@
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="753">
+<<<<<<< HEAD
           <caret line="228" lean-forward="true" selection-start-line="228" selection-end-line="228" />
+=======
+          <caret line="249" lean-forward="true" selection-start-line="249" selection-end-line="249" />
+>>>>>>> abb99bd39ef81eda7cb43dd5545209221f36a638
           <folding>
             <element signature="e#644#655#0" expanded="true" />
           </folding>
