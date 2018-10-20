@@ -18,7 +18,7 @@ def resName2openTime(search_string):
     region_id = 5706 # this is ingolstadt
         
     url = 'https://www.opentable.com/s/?' + 'covers=' + str(covers)\
-    + '&dateTime=' + date_time + '%2019%3A00&metroId=239&' + '&term= '+ restaurant + '&regionIds=' + str(region_id) +'&enableSimpleCuisines=true&includeticketedavailability=true&pageType=0'
+    + '&dateTime=' + date_time + '%2019%3A00&metroId=239&' + '&term='+ restaurant + '&regionIds=' + str(region_id) +'&enableSimpleCuisines=true&includeticketedavailability=true&pageType=0'
     
     # search on opentable    
     bc = BasicCrawler(headers='auto')
@@ -35,5 +35,10 @@ def resName2openTime(search_string):
     # print(status)
     
     list_time = [time.text for time in status[0].find_all('span')]
-    return list_time
+    
+    list_time_string = ' '.join(list_time)
+    
+    return list_time_string
+
+print(resName2openTime('lofts bar'))
 
