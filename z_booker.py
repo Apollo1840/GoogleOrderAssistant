@@ -65,10 +65,16 @@ driver.find_element_by_css_selector(time_btn_css).click()
 wait = ui.WebDriverWait(driver,10)
 wait.until(lambda driver: driver.find_element_by_xpath('//*[@id="firstName"]'))
 
-driver.find_element_by_xpath('//*[@id="firstName"]').send_keys('max')
-driver.find_element_by_xpath('//*[@id="lastName"]').send_keys('musterman')
-driver.find_element_by_xpath('//*[@id="phone-country-input"]/div/div[2]/input').send_keys('15234723254')
-driver.find_element_by_xpath('//*[@id="form-details"]/fieldset/div[2]/div[2]/input').send_keys('c.vlaicu17@gmail.com')
+
+first_name = 'max'
+last_name = 'musterman'
+phone_number = '15234723254'
+email = 'c.vlaicu17@gmail.com'
+
+driver.find_element_by_xpath('//*[@id="firstName"]').send_keys(first_name)
+driver.find_element_by_xpath('//*[@id="lastName"]').send_keys(last_name)
+driver.find_element_by_xpath('//*[@id="phone-country-input"]/div/div[2]/input').send_keys(phone_number)
+driver.find_element_by_xpath('//*[@id="form-details"]/fieldset/div[2]/div[2]/input').send_keys(email)
 
 # driver.find_element_by_xpath('//*[@id="btn-complete"]').click()
 

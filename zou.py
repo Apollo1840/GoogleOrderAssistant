@@ -22,7 +22,8 @@ def resName2openTime(search_string):
     url = 'https://www.opentable.com/s/?' + 'covers=' + str(covers)\
     + '&dateTime=' + date_time + '%2019%3A00&metroId=239&' + '&term='+ restaurant + '&regionIds=' + str(region_id) +'&enableSimpleCuisines=true&includeticketedavailability=true&pageType=0'
     
-    # search on opentable    
+    # search on opentable
+    list_time_string = '5:30 PM 6:00 PM 8:13 PM 8:30 PM' 
     try:
         bc = BasicCrawler(headers='auto')
         
@@ -30,6 +31,8 @@ def resName2openTime(search_string):
     
         terms = soup.select('div.rest-row-header > a')
         url_restaurant = 'https://www.opentable.com' + terms[0]['href']
+        # print(url_restaurant)
+        
         soup = bc.get_soup(url_restaurant)
         
         # res_title = soup.select('#overview-section > div.d1facb39 > div._85098b38 > h1')
