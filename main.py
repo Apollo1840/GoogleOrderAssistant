@@ -27,7 +27,10 @@ import json
 from flask import Flask, request, make_response, jsonify
 
 from forecast import Forecast, validate_params
+from bc3 import BasicCrawler
+import pandas as pd
 
+df = pd.read_csv("db.csv")
 app = Flask(__name__)
 log = app.logger
 
@@ -49,7 +52,10 @@ def webhook():
         return 'json error'
 
     if action == 'knowledge_base':
-        res = req.get('queryResult').get('knowledgeAnswers').get('answers')[0].get('answer')
+        res = req.get('queryResult').get('knowledgeAnswers').get('answers')[
+            0].get('answer')
+    elif action == "restaurant":
+        res = restaurant(req)
     elif action == 'weather':
         res = weather(req)
     elif action == 'weather.activity':
@@ -61,12 +67,75 @@ def webhook():
     elif action == 'weather.temperature':
         res = weather_temperature(req)
     else:
-        res = None
+        res = 'hi there'
         log.error('Unexpected action.')
 
-    print('Response: ' + res)
+    print('Response: {}'.format(res))
 
     return make_response(jsonify({'fulfillmentText': res}))
+
+
+def restaurant(req):
+    """Returns a string containing text with a response to the user
+    with the weather forecast or a prompt for more information
+
+    Takes the city for the forecast and (optional) dates
+    uses the template responses found in weather_responses.py as templates
+    """
+    parameters = req['queryResult']['parameters']
+
+    # validate request parameters, return an error if there are issues
+    error, forecast_params = validate_params(parameters)
+    if error:
+        return error
+
+    print('Dialogflow Parameters:')
+    print(json.dumps(parameters, indent=4))
+    name = parameters['restaurantName']
+    people = parameters['num_people']
+
+    if not name or not people:
+        return
+
+    time = resName2openTime(name)
+
+
+    response = "The available times are" + time
+    return response
+
+
+def resName2openTime(search_string):
+
+    restaurant = search_string.replace(' ', '+')
+
+    covers = 2  # number of people
+    date_time = '2018-10-20'  # it has to be this form
+    region_id = 5706  # this is ingolstadt
+
+    url = 'https://www.opentable.com/s/?' + 'covers=' + str(covers) \
+          + '&dateTime=' + date_time + '%2019%3A00&metroId=239&' + '&term=' + restaurant + '&regionIds=' + str(
+        region_id) + '&enableSimpleCuisines=true&includeticketedavailability=true&pageType=0'
+    print(url)
+
+    # search on opentable
+    bc = BasicCrawler(headers='auto')
+    soup = bc.get_soup(url)
+
+    terms = soup.select('div.rest-row-header > a')
+    url_restaurant = 'https://www.opentable.com' + terms[0]['href']
+    soup = bc.get_soup(url_restaurant)
+
+    # res_title = soup.select('#overview-section > div.d1facb39 > div._85098b38 > h1')
+    # print(res_title[0].text)
+
+    status = soup.select('div.fe4f6429 > div')
+    # print(status)
+
+    list_time = [time.text for time in status[0].find_all('span')]
+
+    list_time_string = ' '.join(list_time)
+
+    return list_time_string
 
 
 def weather(req):
