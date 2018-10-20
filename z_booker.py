@@ -5,12 +5,15 @@ Created on Sat Oct 20 20:22:18 2018
 @author: zouco
 """
 
+import time
+
 # booker
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+import selenium.webdriver.support.ui as ui
 from selenium.webdriver.support import expected_conditions as EC
 
 
@@ -18,7 +21,7 @@ import pickle
 
 # train the cookie
 driver = webdriver.Chrome("D://origin app//chromedriver.exe")
-url = 'https://www.opentable.com/r/hookah-and-sweets-ingolstadt?p=4'
+url = 'https://www.opentable.de/r/hookah-and-sweets-ingolstadt?p=4'
 driver.get(url)
 
 # stop here
@@ -45,16 +48,29 @@ for cookie in cookies:
     driver.add_cookie(cookie)
 
 # know go
-url = 'https://www.opentable.com/r/hookah-and-sweets-ingolstadt?p=4'
+url = 'https://www.opentable.de/r/hookah-and-sweets-ingolstadt?p=4'
 driver.get(url)
-driver.find_element_by_css_selector('div._92fe4c24 > div._5a483512 > div.af5c29c4 > button').click()    
+find_btn_css = 'div._92fe4c24 > div._5a483512 > div.af5c29c4 > button'
+wait = ui.WebDriverWait(driver,10)
+wait.until(lambda driver: driver.find_element_by_css_selector(find_btn_css))
+driver.find_element_by_css_selector(find_btn_css).click()
 
-time_css = 'div.fe4f6429 > div > div:nth-child(1) > div > div._2aa6a1c2._093cb900 > span'
-driver.find_element_by_css_selector(time_css).click()
+ 
+time_btn_css = 'div.fe4f6429 > div > div:nth-child(1) > div > div._2aa6a1c2._093cb900 > span'
+wait = ui.WebDriverWait(driver,10)
+wait.until(lambda driver: driver.find_element_by_css_selector(time_btn_css))
+driver.find_element_by_css_selector(time_btn_css).click()
 
-driver.find_element_by_xpath('//*[@id="firstName"]').sendKeys('max')
-driver.find_element_by_xpath('//*[@id="lastName"]').sendKeys('musterman')
 
+wait = ui.WebDriverWait(driver,10)
+wait.until(lambda driver: driver.find_element_by_xpath('//*[@id="firstName"]'))
+
+driver.find_element_by_xpath('//*[@id="firstName"]').send_keys('max')
+driver.find_element_by_xpath('//*[@id="lastName"]').send_keys('musterman')
+driver.find_element_by_xpath('//*[@id="phone-country-input"]/div/div[2]/input').send_keys('15234723254')
+driver.find_element_by_xpath('//*[@id="form-details"]/fieldset/div[2]/div[2]/input').send_keys('c.vlaicu17@gmail.com')
+
+# driver.find_element_by_xpath('//*[@id="btn-complete"]').click()
 
 
 # ....
