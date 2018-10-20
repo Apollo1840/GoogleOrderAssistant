@@ -485,55 +485,10 @@ def validate_params(parameters):
     error_response = ''
     params = {}
 
-    # City
-    if (parameters.get('address') and
-            isinstance(parameters.get('address'), dict)):
-        params['city'] = parameters.get('address').get('city')
-    else:
-        params['city'] = None
-        error_response += 'please specify city '
-
-    # Date-time and date-periods
-    datetime_input = None
-    if parameters.get('date-time') or parameters.get('date-period'):
-        # Get the date time or date period (can't be both)
-        if parameters.get('date-time'):
-            datetime_input = parameters.get('date-time')
-        else:
-            datetime_input = parameters.get('date-period')
-
-    datetime_start, datetime_end = parse_datetime_input(datetime_input)
-    params['datetime_start'] = datetime_start
-    params['datetime_end'] = datetime_end
-
-    # Unit
-    params['unit'] = parameters.get('unit')
-    if not params['unit'] and _DEFAULT_TEMP_UNIT:
-        params['unit'] = _DEFAULT_TEMP_UNIT
-
-    # activity
-    if parameters.get('activity'):
-        activity = parameters.get('activity')
-        if (activity not in SUMMER_ACTIVITY and
-                activity not in WINTER_ACTIVITY and
-                activity not in DEMI_ACTIVITY):
-            error_response += 'unknown activity '
-    params['activity'] = parameters.get('activity')
 
     # condition
-    params['condition'] = parameters.get('condition')
-    if params['condition'] in UNSUPPORTED:
-        error_response += 'unsupported condition '
-
-    # outfit
-    params['outfit'] = parameters.get('outfit')
-
-    # Special parameters
-    # activity
-    params['activity'] = parameters.get('activity')
-
-    # condition
-    params['condition'] = parameters.get('condition')
+    params['restaurantName'] = parameters.get('restaurantName')
+    params['num_people'] = parameters.get('num_people')
 
     return error_response.strip(), params
 

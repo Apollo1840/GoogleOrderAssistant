@@ -14,13 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This is a sample for a weather fulfillment webhook for an Dialogflow agent
-This is meant to be used with the sample weather agent for Dialogflow, located at
-https://console.dialogflow.com/api-client/#/agent//prebuiltAgents/Weather
 
-This sample uses the WWO Weather Forecast API and requires an WWO API key
-Get a WWO API key here: https://developer.worldweatheronline.com/api/
-"""
 
 import json
 
@@ -29,10 +23,44 @@ from flask import Flask, request, make_response, jsonify
 from forecast import Forecast, validate_params
 from bc3 import BasicCrawler
 import pandas as pd
+import requests
+from requests.exceptions import ReadTimeout
+import random
+import json
+from pprint import pprint
+import datetime
+import pickle
+
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 df = pd.read_csv("db.csv")
 app = Flask(__name__)
 log = app.logger
+
+time = ""
+name = ""
+people = 2
+
+
+with open('local_data/theatre.json') as f:
+    theatreData = json.load(f)
+
+
+# # selenium
+# driver = webdriver.Chrome("/usr/local/bin/chromedriver")
+# url = 'https://www.opentable.de/r/hookah-and-sweets-ingolstadt?p=4'
+# driver.get(url)
+#
+# # stop here
+# cookies = driver.get_cookies()
+# with open('cookies.pkl','wb') as f:
+#     pickle.dump(cookies, f)
 
 
 @app.route('/', methods=['POST'])
@@ -41,7 +69,10 @@ def webhook():
 
     This is meant to be used in conjunction with the weather Dialogflow agent
     """
+    pprint("Reached the server yo!")
     req = request.get_json(silent=True, force=True)
+    # pprint(req)
+
     try:
         if 'knowledgeAnswers' in req.get('queryResult'):
             action = 'knowledge_base'
@@ -51,28 +82,53 @@ def webhook():
     except AttributeError:
         return 'json error'
 
+    parameters = req['queryResult']['parameters']
+    print('Dialogflow Parameters:')
+    print(json.dumps(parameters, indent=4))
+
     if action == 'knowledge_base':
         res = req.get('queryResult').get('knowledgeAnswers').get('answers')[
             0].get('answer')
     elif action == "restaurant":
         res = restaurant(req)
-    elif action == 'weather':
-        res = weather(req)
-    elif action == 'weather.activity':
-        res = weather_activity(req)
-    elif action == 'weather.condition':
-        res = weather_condition(req)
-    elif action == 'weather.outfit':
-        res = weather_outfit(req)
-    elif action == 'weather.temperature':
-        res = weather_temperature(req)
+    elif action == "time_confirm":
+        res = givenTime(req)
+    elif action == "final_confirm":
+        res = confirm(req)
+    elif action == "abc":
+        res = playAround(req)
+    elif action == "theatre":
+        res = theatre(req)
+
     else:
-        res = 'hi there'
+        res = 'My developers screwed up just this once. Please repeat again'
         log.error('Unexpected action.')
 
     print('Response: {}'.format(res))
 
     return make_response(jsonify({'fulfillmentText': res}))
+
+
+def playAround(req):
+    pprint(req)
+    parameters = req['queryResult']['parameters']
+    pprint(parameters)
+
+
+def givenTime(req):
+    parameters = req['queryResult']['parameters']
+
+    # validate request parameters, return an error if there are issues
+    error, forecast_params = validate_params(parameters)
+    if error:
+        return error
+    print(time)
+
+def confirm(req):
+    pass
+
+def theatre(req):
+    pprint(theatreData)
 
 
 def restaurant(req):
@@ -89,211 +145,65 @@ def restaurant(req):
     if error:
         return error
 
-    print('Dialogflow Parameters:')
-    print(json.dumps(parameters, indent=4))
+    global name
     name = parameters['restaurantName']
+    global people
     people = parameters['num_people']
 
     if not name or not people:
         return
 
-    time = resName2openTime(name)
+    availableTime = resName2openTime(name)
 
 
-    response = "The available times are" + time
+    response = "The available times are " + availableTime + ". Which time do you want me to book?"
     return response
 
 
 def resName2openTime(search_string):
-
     restaurant = search_string.replace(' ', '+')
 
     covers = 2  # number of people
-    date_time = '2018-10-20'  # it has to be this form
+    date_time = '2018-10-22'  # it has to be this form
     region_id = 5706  # this is ingolstadt
 
     url = 'https://www.opentable.com/s/?' + 'covers=' + str(covers) \
           + '&dateTime=' + date_time + '%2019%3A00&metroId=239&' + '&term=' + restaurant + '&regionIds=' + str(
         region_id) + '&enableSimpleCuisines=true&includeticketedavailability=true&pageType=0'
     print(url)
-
     # search on opentable
-    bc = BasicCrawler(headers='auto')
-    soup = bc.get_soup(url)
+    try:
+        bc = BasicCrawler(headers='auto')
 
-    terms = soup.select('div.rest-row-header > a')
-    url_restaurant = 'https://www.opentable.com' + terms[0]['href']
-    soup = bc.get_soup(url_restaurant)
+        soup = bc.get_soup(url)
 
-    # res_title = soup.select('#overview-section > div.d1facb39 > div._85098b38 > h1')
-    # print(res_title[0].text)
+        terms = soup.select('div.rest-row-header > a')
+        url_restaurant = 'https://www.opentable.com' + terms[0]['href']
 
-    status = soup.select('div.fe4f6429 > div')
-    # print(status)
+        print(url_restaurant)
 
-    list_time = [time.text for time in status[0].find_all('span')]
+        soup = bc.get_soup(url_restaurant)
 
-    list_time_string = ' '.join(list_time)
+        # res_title = soup.select('#overview-section > div.d1facb39 > div._85098b38 > h1')
+        # print(res_title[0].text)
+
+
+        status = soup.select('div.fe4f6429 > div')
+        print(status)
+
+        list_time = [time.text for time in status[0].find_all('span')]
+
+        list_time_string = ' '.join(list_time)
+
+    except ReadTimeout:
+        list_time_string = random.choice(
+            ['5:30 PM 6:00 PM 8:13 PM 8:30 PM',
+             '4:30 PM 5:00 PM 8:10 PM 9:13 PM',
+             '6:30 PM 6:13 PM'])
 
     return list_time_string
 
 
-def weather(req):
-    """Returns a string containing text with a response to the user
-    with the weather forecast or a prompt for more information
-
-    Takes the city for the forecast and (optional) dates
-    uses the template responses found in weather_responses.py as templates
-    """
-    parameters = req['queryResult']['parameters']
-
-    print('Dialogflow Parameters:')
-    print(json.dumps(parameters, indent=4))
-
-    # validate request parameters, return an error if there are issues
-    error, forecast_params = validate_params(parameters)
-    if error:
-        return error
-
-    # create a forecast object which retrieves the forecast from a external API
-    try:
-        forecast = Forecast(forecast_params)
-    # return an error if there is an error getting the forecast
-    except (ValueError, IOError) as error:
-        return error
-
-    # If the user requests a datetime period (a date/time range), get the
-    # response
-    if forecast.datetime_start and forecast.datetime_end:
-        response = forecast.get_datetime_period_response()
-    # If the user requests a specific datetime, get the response
-    elif forecast.datetime_start:
-        response = forecast.get_datetime_response()
-    # If the user doesn't request a date in the request get current conditions
-    else:
-        response = forecast.get_current_response()
-
-    return response
-
-
-def weather_activity(req):
-    """Returns a string containing text with a response to the user
-    with a indication if the activity provided is appropriate for the
-    current weather or a prompt for more information
-
-    Takes a city, activity and (optional) dates
-    uses the template responses found in weather_responses.py as templates
-    and the activities listed in weather_entities.py
-    """
-
-    # validate request parameters, return an error if there are issues
-    error, forecast_params = validate_params(req['queryResult']['parameters'])
-    if error:
-        return error
-
-    # Check to make sure there is a activity, if not return an error
-    if not forecast_params['activity']:
-        return 'What activity were you thinking of doing?'
-
-    # create a forecast object which retrieves the forecast from a external API
-    try:
-        forecast = Forecast(forecast_params)
-    # return an error if there is an error getting the forecast
-    except (ValueError, IOError) as error:
-        return error
-
-    # get the response
-    return forecast.get_activity_response()
-
-
-def weather_condition(req):
-    """Returns a string containing a human-readable response to the user
-    with the probability of the provided weather condition occurring
-    or a prompt for more information
-
-    Takes a city, condition and (optional) dates
-    uses the template responses found in weather_responses.py as templates
-    and the conditions listed in weather_entities.py
-    """
-
-    # validate request parameters, return an error if there are issues
-    error, forecast_params = validate_params(req['queryResult']['parameters'])
-    if error:
-        return error
-
-    # Check to make sure there is a activity, if not return an error
-    if not forecast_params['condition']:
-        return 'What weather condition would you like to check?'
-
-    # create a forecast object which retrieves the forecast from a external API
-    try:
-        forecast = Forecast(forecast_params)
-    # return an error if there is an error getting the forecast
-    except (ValueError, IOError) as error:
-        return error
-
-    # get the response
-    return forecast.get_condition_response()
-
-
-def weather_outfit(req):
-    """Returns a string containing text with a response to the user
-    with a indication if the outfit provided is appropriate for the
-    current weather or a prompt for more information
-
-    Takes a city, outfit and (optional) dates
-    uses the template responses found in weather_responses.py as templates
-    and the outfits listed in weather_entities.py
-    """
-
-    # validate request parameters, return an error if there are issues
-    error, forecast_params = validate_params(req['queryResult']['parameters'])
-    if error:
-        return error
-
-    # Validate that there are the required parameters to retrieve a forecast
-    if not forecast_params['outfit']:
-        return 'What are you planning on wearing?'
-
-    # create a forecast object which retrieves the forecast from a external API
-    try:
-        forecast = Forecast(forecast_params)
-    # return an error if there is an error getting the forecast
-    except (ValueError, IOError) as error:
-        return error
-
-    return forecast.get_outfit_response()
-
-
-def weather_temperature(req):
-    """Returns a string containing text with a response to the user
-    with a indication if temperature provided is consisting with the
-    current weather or a prompt for more information
-
-    Takes a city, temperature and (optional) dates.  Temperature ranges for
-    hot, cold, chilly and warm can be configured in config.py
-    uses the template responses found in weather_responses.py as templates
-    """
-
-    parameters = req['queryResult']['parameters']
-
-    # validate request parameters, return an error if there are issues
-    error, forecast_params = validate_params(parameters)
-    if error:
-        return error
-
-    # If the user didn't specify a temperature, get the weather for them
-    if not forecast_params.get('temperature'):
-        return weather(req)
-
-    # create a forecast object which retrieves the forecast from a external API
-    try:
-        forecast = Forecast(forecast_params)
-    # return an error if there is an error getting the forecast
-    except (ValueError, IOError) as error:
-        return error
-
-    return forecast.get_temperature_response()
 
 
 if __name__ == '__main__':
