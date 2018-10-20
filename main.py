@@ -112,17 +112,35 @@ def webhook():
 def playAround(req):
     pprint(req)
     parameters = req['queryResult']['parameters']
+
     pprint(parameters)
 
 
 def givenTime(req):
-    parameters = req['queryResult']['parameters']
 
-    # validate request parameters, return an error if there are issues
-    error, forecast_params = validate_params(parameters)
-    if error:
-        return error
-    print(time)
+    try:
+        parameters = req['queryResult']['parameters']
+
+        pprint(req)
+
+        contextParams  = req['queryResult']['outputContexts'][-1]['parameters']
+
+
+        numberPeople = contextParams['num_people']
+        restaurantName = contextParams['restaurantName']
+        time_original = contextParams['time.original']
+
+        # validate request parameters, return an error if there are issues
+        error, forecast_params = validate_params(parameters)
+        if error:
+            return error
+        print(time)
+
+    except AttributeError:
+        return 'I failed to comply, sorry. I am still a prototype. Try again!'
+
+    return "So, shall I book the reservation for " + numberPeople + \
+           " persons at " + restaurantName + " at " + time_original + "?"
 
 def confirm(req):
     pass
